@@ -293,7 +293,7 @@ AddEventHandler('onResourceStop', function(resource)
     end
 end)
 
-RegisterNetEvent('txAdmin:events:scheduledRestart', function(eventData)
+RegisterServerEvent('txAdmin:events:scheduledRestart', function(eventData)
     if eventData.secondsRemaining == 60 then
         CreateThread(function()
             Wait(45000)
@@ -302,16 +302,6 @@ RegisterNetEvent('txAdmin:events:scheduledRestart', function(eventData)
 	else
 		SaveDoorStates()
     end
-end)
-
-RegisterNetEvent('qb-doorlock:server:removeLockpick', function(type)
-	local Player = QBCore.Functions.GetPlayer(source)
-
-	if not Player then return end
-
-	if type == "advancedlockpick" or type == "lockpick" then
-		Player.Functions.RemoveItem(type, 1)
-	end
 end)
 
 -- Commands
@@ -323,3 +313,4 @@ end, Config.CommandPermission)
 QBCore.Commands.Add('doordebug', Lang:t("general.doordebug_command_description"), {}, false, function(source)
 	TriggerClientEvent('qb-doorlock:client:ToggleDoorDebug', source)
 end, Config.CommandPermission)
+

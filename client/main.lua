@@ -316,10 +316,10 @@ local function lockpickFinish(success)
 		QBCore.Functions.Notify(Lang:t("error.lockpick_fail"), 'error', 2500)
 		if math.random(1,100) <= 17 then
 			if usingAdvanced then
-				TriggerServerEvent("qb-doorlock:server:removeLockpick", "advancedlockpick")
+				TriggerServerEvent('qb-inventory:server:RemoveItem',"advancedlockpick", 1, false)
 				TriggerEvent('inventory:client:ItemBox', QBCore.Shared.Items["advancedlockpick"], "remove")
 			else
-				TriggerServerEvent("qb-doorlock:server:removeLockpick", "lockpick")
+				TriggerServerEvent('qb-inventory:server:RemoveItem',"lockpick", 1, false)
 				TriggerEvent('inventory:client:ItemBox', QBCore.Shared.Items["lockpick"], "remove")
 			end
 		end
@@ -486,7 +486,20 @@ end)
 RegisterNetEvent('lockpicks:UseLockpick', function(isAdvanced)
 	if not closestDoor.data or not next(closestDoor.data) or PlayerData.metadata['isdead'] or PlayerData.metadata['ishandcuffed'] or (not closestDoor.data.pickable and not closestDoor.data.lockpick) or not closestDoor.data.locked then return end
 	usingAdvanced = isAdvanced
-	TriggerEvent('qb-lockpick:client:openLockpick', lockpickFinish)
+	TriggerEvent('animations:client:EmoteCommandStart', {"mechanic"})
+	local success = exports['qb-lock']:StartLockPickCircle(4,10)
+        QBCore.Functions.Progressbar('lockpicking', "Lockpicking", 5000 , false, true, {
+        disableMovement = true,
+        disableCarMovement = true,
+        disableMouse = false,
+        disableCombat = true,
+        }, {}, {}, {}, function()    
+            local playerPed = PlayerPedId()
+           
+            TriggerEvent('animations:client:EmoteCommandStart', {"c"})
+			TriggerServerEvent('qb-doorlock:server:updateState', closestDoor.id, false, false, true, false) -- Broadcast new state of the door to everyone
+            -- TriggerServerEvent("mr-lumberjack:lumberprocessed")
+		end)
 end)
 
 RegisterNetEvent('qb-doorlock:client:addNewDoor', function()
@@ -598,7 +611,7 @@ RegisterNetEvent('qb-doorlock:client:addNewDoor', function()
 	if doorData.pickable ~= 'true' then doorData.pickable = nil end
 	if doorData.cantunlock ~= 'true' then doorData.cantunlock = nil end
 	if doorData.hidelabel ~= 'true' then doorData.hidelabel = nil end
-
+	
 	doorData.locked = doorData.locked == 'true'
 	doorData.distance = tonumber(doorData.distance)
 	if doorData.doortype == 'door' or doorData.doortype == 'sliding' or doorData.doortype == 'garage' then
@@ -763,7 +776,7 @@ RegisterCommand('toggledoorlock', function()
 	if closestDoor.data.audioRemote then src = NetworkGetNetworkIdFromEntity(playerPed) end
 
 	TriggerServerEvent('qb-doorlock:server:updateState', closestDoor.id, locked, src, false, false, true, true) -- Broadcast new state of the door to everyone
-end, false)
+end)
 TriggerEvent("chat:removeSuggestion", "/toggledoorlock")
 RegisterKeyMapping('toggledoorlock', Lang:t("general.keymapping_description"), 'keyboard', 'E')
 
@@ -805,7 +818,7 @@ RegisterCommand('remotetriggerdoor', function()
 	end
 
 	TriggerServerEvent('qb-doorlock:server:updateState', nearestDoor.id, not nearestDoor.data.locked, NetworkGetNetworkIdFromEntity(playerPed), false, false, true, true) -- Broadcast new state of the door to everyone
-end, false)
+end)
 TriggerEvent("chat:removeSuggestion", "/remotetriggerdoor")
 RegisterKeyMapping('remotetriggerdoor', Lang:t("general.keymapping_remotetriggerdoor"), 'keyboard', 'H')
 
